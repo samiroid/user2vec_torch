@@ -9,7 +9,7 @@ import time
 MIN_DOC_LEN=4
 from ipdb import set_trace
 
-class negative_sampler():
+class NegativeSampler():
 
     def __init__(self, vocab, word_count, warp=0.75, n_neg_samples=5):
         '''
@@ -81,7 +81,7 @@ def extract_word_embeddings(embeddings_path, vocab, encoding="latin-1"):
     
     return E, vocab_redux
 
-def save_user(user_id, user_txt, neg_sampler, rng, outpath, n_neg_samples, max_doclen, split=0.9):
+def save_user(user_id, user_txt, negative_sampler, rng, outpath, n_samples, max_doclen, split=0.9):
     print("> saving user: {}".format(user_id))
     #shuffle the data
     shuf_idx = np.arange(len(user_txt))
@@ -94,24 +94,20 @@ def save_user(user_id, user_txt, neg_sampler, rng, outpath, n_neg_samples, max_d
     train = []
     neg_samples = []
     for x in user_txt_train:        
-        # x_arr = np.array(x, dtype=np.int32).reshape(1,-1)        
-        #to include multiple negative samples per instance we will replicate samples so that 
-        #the number of samples is the same as the number of negative samples
-        #replicate each sample by the number of negative samples
-        x_rep = np.tile(x,(n_neg_samples,1))
+        #replicate each sample by the number of negative samples so that the number
+        # of samples is the same as the number of negative samples
+        x_rep = np.tile(x,(n_samples,1))
         #calculate negative samples (of max_doclen size)        
-        neg_sample = neg_sampler.sample((n_neg_samples, len(x)))    
+        neg_sample = negative_sampler.sample((n_samples, len(x)))    
         train.append(x_rep)
-        neg_samples.append(neg_sample)
-        
+        neg_samples.append(neg_sample)            
     
-    # neg_samples = [neg_sampler.sample(len(txt), n_neg_samples) for txt in user_txt_train]    
     with open(outpath+user_id, "wb") as fo:        
         pickle.dump([user_id, train, user_txt_test, neg_samples], fo)
 
 def get_users(path, vocab, word_counts, random_seed, n_neg_samples, max_doclen, outpath):
     #negative sampler    
-    sampler = negative_sampler(vocab, word_counts, warp=0.75)
+    sampler = NegativeSampler(vocab, word_counts, warp=0.75)
     rng = np.random.RandomState(random_seed)    
     with open(path) as fi:
         #peek at the first line to get the first user

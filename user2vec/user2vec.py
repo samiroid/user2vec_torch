@@ -16,8 +16,7 @@ class User2Vec(nn.Module):
         self.margin = margin
         initrange = 1.0 / self.emb_dimension
         init.uniform_(self.U.weight.data, -initrange, initrange)
-        #to help with loss function
-        self.zero_tensor = torch.tensor([0]).float()
+                
 
     def forward(self, doc, neg_samples):
         #document embeddings
@@ -30,10 +29,10 @@ class User2Vec(nn.Module):
         logits = emb_doc @ emb_user.T
         #negative sample probabilities
         neg_logits = emb_neg @ emb_user.T
-        #loss: max(0, margin - pos + neg)
-        loss = (self.margin - (logits + neg_logits))                
-        loss = torch.max(self.zero_tensor.expand_as(loss), loss).mean()
-        return loss
+        #loss: max(0, margin - pos + neg)             
+        zero_tensor = torch.tensor([0]).float().expand_as(logits)        
+        loss = torch.max(zero_tensor, (self.margin - (logits + neg_logits)))
+        return loss.mean()
     
     def doc_logproba(self, doc):
         #document embeddings
