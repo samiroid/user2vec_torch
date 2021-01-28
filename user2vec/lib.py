@@ -103,13 +103,12 @@ def save_user(user_id, user_txt, negative_sampler, rng, outpath, n_samples, spli
 
         pos_samples = []
         neg_samples = []
-        for x in user_txt_train:        
-            #replicate each sample by the number of negative samples so that the number
-            # of samples is the same as the number of negative samples
-            x_rep = np.tile(x,(n_samples,1))
+        for x in user_txt_train:                    
             #calculate negative samples 
             neg_sample = negative_sampler.sample((n_samples, len(x)))    
-            pos_samples.append(x_rep)
+            #replicate each sample to match the number of negative samples            
+            pos_sample = np.tile(x,(n_samples,1))
+            pos_samples.append(pos_sample)
             neg_samples.append(neg_sample)            
         
         with open(outpath+user_id, "wb") as fo:        
