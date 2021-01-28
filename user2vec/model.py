@@ -34,19 +34,19 @@ class User2Vec(nn.Module):
         emb_pos = self.E(pos_sample)        
         emb_neg = self.E(neg_samples)
         #user embedding
-        emb_user = self.U(torch.tensor([0]))                
+        emb_user = self.U(torch.tensor([0], device=self.device))                
         #prediction
         logits = emb_pos @ emb_user.T        
         neg_logits = emb_neg @ emb_user.T
         #loss: max(0, margin - pos + neg)             
-        zero_tensor = torch.tensor([0]).float().expand_as(logits)        
+        zero_tensor = torch.tensor([0], device=self.device).float().expand_as(logits)        
         loss = torch.max(zero_tensor, (self.margin - logits + neg_logits))
         return loss.mean()
     
     def doc_proba(self, doc):
         #embeddings
         emb_doc = self.E(doc)                
-        emb_user = self.U(torch.tensor([0]))                
+        emb_user = self.U(torch.tensor([0], device=self.device))                
         #conditonal word likelihood 
         logits = emb_doc @ emb_user.T        
         probs = torch.sigmoid(logits.squeeze())        
