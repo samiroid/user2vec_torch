@@ -10,7 +10,8 @@ SHUFFLE_SEED=10
 
 class User2Vec(nn.Module):
 
-    def __init__(self, user_id, word_embeddings, outpath, margin=1, initial_lr=0.001, epochs=10, device=None):
+    def __init__(self, user_id, word_embeddings, outpath, margin=1, initial_lr=0.001, 
+                 epochs=10, device=None):
         super(User2Vec, self).__init__()        
         self.user_id = user_id
         self.outpath = outpath
@@ -24,7 +25,8 @@ class User2Vec(nn.Module):
         self.epochs = epochs
         if not device:
             device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-        self.device = device               
+        self.device = device
+        print("[device: {}]".format(self.device))      
 
     def forward(self, pos_sample, neg_samples):
         #content embeddings

@@ -175,7 +175,7 @@ def build_data(inpath, outpath, embeddings_path, emb_encoding="latin-1",
         #save last user
         save_user(curr_user, user_docs, sampler, rng, users_path, n_neg_samples)
 
-def train_model(path,  epochs=20, initial_lr=0.001, margin=1, reset=False):
+def train_model(path,  epochs=20, initial_lr=0.001, margin=1, reset=False, device=None):
     txt_path = path+"/txt/"    
     if reset:
         shutil.rmtree(txt_path, ignore_errors=True)
@@ -198,6 +198,7 @@ def train_model(path,  epochs=20, initial_lr=0.001, margin=1, reset=False):
             user_id, pos_samples, neg_samples, val_samples = pickle.load(fi)
         
         print("{} | tr: {} | ts: {}".format(user_id,len(pos_samples), len(val_samples)))
-        model = User2Vec(user_id, E.T, txt_path, margin=margin, initial_lr=initial_lr, epochs=epochs)    
+        model = User2Vec(user_id, E.T, txt_path, margin=margin, initial_lr=initial_lr, 
+                        epochs=epochs, device=device)    
         model.fit(pos_samples, neg_samples, val_samples)
 
