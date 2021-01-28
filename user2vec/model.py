@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import init
 from numpy.random import RandomState
+from tadat.core.helpers import colstr
 
 SHUFFLE_SEED=10
 
@@ -82,16 +83,19 @@ class User2Vec(nn.Module):
                 v_ = torch.from_numpy(v).long().to(self.device)
                 val_prob += self.doc_proba(v_).item()
             val_prob = round(val_prob/len(val_x),4)
-            print("epoch: {} | loss: {} | val avg prob: {} ".format(e, avg_loss, val_prob))                
+            status_msg = "epoch: {} | loss: {} | val avg prob: {} ".format(e, avg_loss, val_prob)
             if val_prob > best_val_prob:    
                 n_val_drops=0            
                 best_val_prob = val_prob
                 self.save_embedding()                
+                status_msg = colstr(status_msg, "green")
             elif val_prob < (best_val_prob - loss_margin):                
                 n_val_drops+=1
                 if n_val_drops == MAX_VAL_DROPS:
                     print("[early stopping: {} epochs]".format(e))
                     break
+                status_msg = colstr(status_msg, "red")            
+            print(status_msg)                
 
     def save_embedding(self): 
         with open(self.outpath+self.user_id+".txt","w") as fo:
