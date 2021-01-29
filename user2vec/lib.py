@@ -175,6 +175,16 @@ def build_data(inpath, outpath, embeddings_path, emb_encoding="latin-1",
         #save last user
         save_user(curr_user, user_docs, sampler, rng, users_path, n_neg_samples)
 
+def stich_embeddings(inpath, outpath, emb_dim):
+    print("[writing embeddings to {}]".format(outpath+"U.txt"))
+    with open(outpath+"U.txt","w") as fo:    
+        user_embeddings = list(Path(inpath).iterdir())
+        fo.write("{}\t{}\n".format(len(user_embeddings), emb_dim))
+        for u in user_embeddings:
+            with open(u, "r") as fi:
+                l = fi.readlines()[1]
+            fo.write(l)
+
 def train_model(path,  epochs=20, initial_lr=0.001, margin=1, reset=False, device=None):
     txt_path = path+"/txt/"    
     if reset:
@@ -182,9 +192,9 @@ def train_model(path,  epochs=20, initial_lr=0.001, margin=1, reset=False, devic
     
     if not os.path.exists(os.path.dirname(txt_path)):
         os.makedirs(os.path.dirname(txt_path))   
-
+    
     E = np.load(path+"/pkl/word_emb.npy")    
-    E = torch.from_numpy(E.astype(np.float32)) 
+    E = torch.from_numpy(E.astype(np.float32))     
     user_data = list(Path(path+"/pkl/users/").iterdir())
     random.shuffle(user_data)
     cache = set([os.path.basename(f).replace(".txt","") for f in Path(txt_path).iterdir()])
@@ -201,4 +211,4 @@ def train_model(path,  epochs=20, initial_lr=0.001, margin=1, reset=False, devic
         model = User2Vec(user_id, E.T, txt_path, margin=margin, initial_lr=initial_lr, 
                         epochs=epochs, device=device)    
         model.fit(pos_samples, neg_samples, val_samples)
-
+    stich_embeddings(txt_path, path, E.shape[0])
