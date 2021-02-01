@@ -142,10 +142,11 @@ def build_data(inpath, outpath, embeddings_path, emb_encoding="latin-1",
     if not vocab:
         #compute vocabulary
         vocab, word_counts = get_vocabulary(inpath, min_word_freq=min_word_freq,max_vocab_size=max_vocab_size)        
+        vocab_len = len(vocab)
         #extract word embeddings
         E, vocab_redux = extract_word_embeddings(embeddings_path, vocab, encoding=emb_encoding)
         #vocab_redux has only words for which an embedding was found
-        print("[vocab size: {} > {}]".format(len(vocab),len(vocab_redux)))
+        print("[vocab size: {} > {}]".format(vocab_len,len(vocab_redux)))
         vocab = vocab_redux
         with open(pkl_path+"word_emb.npy", "wb") as f:
             np.save(f, E)    
