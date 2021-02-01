@@ -12,9 +12,10 @@ from pathlib import Path
 from model import User2Vec
 import shutil
 import random
+import sys
 
 MIN_DOC_LEN=2
-MIN_DOCS = 50
+MIN_DOCS = 2
 
 class NegativeSampler():
 
@@ -92,7 +93,8 @@ def extract_word_embeddings(embeddings_path, vocab, encoding="latin-1"):
 
 def save_user(user_id, user_txt, negative_sampler, rng, outpath, n_samples, split=0.8):    
     if len(user_txt) > MIN_DOCS:
-        print("> saving user: {}  ({})".format(user_id,len(user_txt)))
+        sys.stdout.write("\r> saving user: {}  ({})".format(user_id,len(user_txt)))
+        sys.stdout.flush()
         #shuffle the data
         shuf_idx = np.arange(len(user_txt))
         rng.shuffle(shuf_idx)
