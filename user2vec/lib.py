@@ -77,8 +77,8 @@ def get_vocabulary(inpath, min_word_freq=5, max_vocab_size=None):
 
 def extract_word_embeddings(embeddings_path, vocab, encoding="latin-1"):    
     print(" > loading word embeddings")
-    full_E, full_wrd2idx = embeddings.read_embeddings(embeddings_path, vocab, encoding)
-    ooevs = embeddings.get_OOEVs(full_E, full_wrd2idx)
+    full_E = embeddings.read_embeddings(embeddings_path, vocab, encoding)
+    ooevs = embeddings.get_OOEVs(full_E, vocab)
     #keep only words with pre-trained embeddings    
     for w in ooevs:
         del vocab[w]	
@@ -91,35 +91,35 @@ def extract_word_embeddings(embeddings_path, vocab, encoding="latin-1"):
     
     return E, vocab_redux
 
-def save_user(user_id, user_txt, negative_sampler, rng, outpath, n_samples, split=0.8):    
-    if len(user_txt) > MIN_DOCS:
-        sys.stdout.write("\r> saving user: {}  ({})".format(user_id,len(user_txt)))
-        sys.stdout.flush()
-        #shuffle the data
-        shuf_idx = np.arange(len(user_txt))
-        rng.shuffle(shuf_idx)
-        user_txt_shuf = [user_txt[i] for i in shuf_idx]
-        split_idx = int(len(user_txt)*split)
-        user_txt_train = user_txt_shuf[:split_idx]
-        validation_samples = user_txt_shuf[split_idx:]
+def save_user(user_id, user_txt, negative_sampler, rng, outpath, n_samples, split=0.8):        
+    sys.stdout.write("\r> saving user: {}  ({})".format(user_id,len(user_txt)))
+    sys.stdout.flush()
+    #shuffle the data
+    shuf_idx = np.arange(len(user_txt))
+    rng.shuffle(shuf_idx)
+    user_txt_shuf = [user_txt[i] for i in shuf_idx]
+    split_idx = int(len(user_txt)*split)
+    user_txt_train = user_txt_shuf[:split_idx]
+    validation_samples = user_txt_shuf[split_idx:]
 
-        pos_samples = []
-        neg_samples = []
-        for x in user_txt_train:                    
-            #calculate negative samples 
-            neg_sample = negative_sampler.sample((n_samples, len(x)))    
-            #replicate each sample to match the number of negative samples            
-            pos_sample = np.tile(x,(n_samples,1))
-            pos_samples.append(pos_sample)
-            neg_samples.append(neg_sample)            
-        
-        with open(outpath+user_id, "wb") as fo:        
-            pickle.dump([user_id, pos_samples, neg_samples, validation_samples], fo)
-    else:
-        print("> IGNORED user: {}  ({})".format(user_id,len(user_txt)))
+    pos_samples = []
+    neg_samples = []
+    for x in user_txt_train:                    
+        #calculate negative samples 
+        neg_sample = negative_sampler.sample((n_samples, len(x)))    
+        #replicate each sample to match the number of negative samples            
+        pos_sample = np.tile(x,(n_samples,1))
+        pos_samples.append(pos_sample)
+        neg_samples.append(neg_sample)            
+    
+    with open(outpath+user_id, "wb") as fo:        
+        pickle.dump([user_id, pos_samples, neg_samples, validation_samples], fo)
+
+    
 
 def build_data(inpath, outpath, embeddings_path, emb_encoding="latin-1", 
-                min_word_freq=5, max_vocab_size=None, random_seed=123, n_neg_samples=10, reset=False):
+                min_word_freq=5, max_vocab_size=None, random_seed=123, n_neg_samples=10, 
+                min_docs_user=2, reset=False):
     pkl_path=outpath+"pkl/"
     users_path=pkl_path+"users/"  
 
@@ -165,8 +165,11 @@ def build_data(inpath, outpath, embeddings_path, emb_encoding="latin-1",
         for line in fi:                        
             user, doc = line.replace("\"", "").replace("'","").split("\t")            
             #if we reach a new user, save the current one
-            if user!= curr_user:                
-                save_user(curr_user, user_docs, sampler, rng, users_path, n_neg_samples)
+            if user!= curr_user:
+                if len(user_docs) >= min_docs_user:
+                    save_user(curr_user, user_docs, sampler, rng, users_path, n_neg_samples)
+                else:
+                    print("> IGNORED user: {}  ({})".format(user,len(user_docs)))
                 #reset current user
                 curr_user = user
                 user_docs = []  
@@ -176,7 +179,10 @@ def build_data(inpath, outpath, embeddings_path, emb_encoding="latin-1",
             #accumulate all texts
             user_docs.append(np.array(doc_idx, dtype=np.int32).reshape(1,-1))        
         #save last user
-        save_user(curr_user, user_docs, sampler, rng, users_path, n_neg_samples)
+        if len(user_docs) >= min_docs_user:
+            save_user(curr_user, user_docs, sampler, rng, users_path, n_neg_samples)
+        else:
+            print("> IGNORED user: {}  ({})".format(user,len(user_docs)))
 
 def stich_embeddings(inpath, outpath, emb_dim):
     print("[writing embeddings to {}]".format(outpath+"U.txt"))
