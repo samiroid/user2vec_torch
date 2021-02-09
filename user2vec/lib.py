@@ -1,18 +1,19 @@
 import argparse
 # import codecs
-import pickle
 from collections import Counter
-from tadat.core import embeddings
-import numpy as np
-import os
-import time
 # from ipdb import set_trace
-import torch
 from pathlib import Path
-from model import User2Vec
-import shutil
+import os
+import pickle
 import random
+import shutil
 import sys
+import time
+
+import numpy as np
+import torch
+from .model import User2Vec
+from tadat.core import embeddings
 
 MIN_DOC_LEN=2
 MIN_DOCS = 2
