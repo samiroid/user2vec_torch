@@ -1,6 +1,6 @@
 import argparse
 import os
-from lib import build_data, train_model
+from .lib import build_data, train_model
 import torch 
 
 def cmdline_args():
