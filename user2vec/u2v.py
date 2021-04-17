@@ -8,6 +8,8 @@ def cmdline_args():
     parser.add_argument('-input', type=str, required=True, help='input folder')    
     parser.add_argument('-output', type=str, required=True, help='path of the output')    
     parser.add_argument('-emb', type=str, required=True, help='path to word embeddings')    
+    parser.add_argument('-emb_encoding', type=str, default="utf-8", required=True, 
+    help='encoding of word embeddings')    
     parser.add_argument('-vocab_size', type=int, help='max size of vocabulary')
     parser.add_argument('-min_word_freq', type=int, help='ignore words that occur less than min_word_freq times',default=5)
     parser.add_argument('-min_docs_user', type=int, help='ignore users with less min_docs_user documents',default=3)
@@ -37,7 +39,7 @@ if __name__ == "__main__" :
 
     if (not args.train) or args.build:
         print("> prepare data")
-        build_data(args.input, args.output, args.emb, emb_encoding="latin-1", 
+        build_data(args.input, args.output, args.emb, emb_encoding=args.emb_encoding, 
                     min_word_freq=args.min_word_freq, max_vocab_size=None, 
                     random_seed=args.seed, n_neg_samples=args.neg_samples, 
                     min_docs_user=args.min_docs_user, reset=args.reset)
